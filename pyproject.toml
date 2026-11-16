@@ -1,0 +1,8 @@
+[project]
+name = "echarts-streamlit-studio"
+version = "1.0.0"
+description = "Dataset-aware educational explorer for Streamlit's native Apache ECharts integration"
+requires-python = ">=3.11"
+dependencies = ["streamlit>=1.66,<2", "altair>=6.3,<7", "pandas>=2.2,<3", "numpy>=2.0,<2.3", "openpyxl>=3.1", "pyarrow>=18"]
+[tool.pytest.ini_options]
+pythonpath = ["."]
