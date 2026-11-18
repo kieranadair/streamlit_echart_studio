@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from math import cos, sin
 
+import pandas as pd
+
 
 @dataclass(frozen=True)
 class Sample:
@@ -13,9 +15,17 @@ class Sample:
     lesson: str
     time_axis: bool = False
 
-    def records(self):
-        columns = (self.dimension, *self.measures)
-        return [dict(zip(columns, row, strict=True)) for row in self.rows]
+    extra_dimensions: tuple[str, ...] = ()
+
+    @property
+    def columns(self):
+        return (self.dimension, *self.extra_dimensions, *self.measures)
+
+    def dataframe(self) -> pd.DataFrame:
+        frame = pd.DataFrame(self.rows, columns=self.columns)
+        if self.time_axis:
+            frame[self.dimension] = pd.to_datetime(frame[self.dimension])
+        return frame
 
 
 SAMPLES = {
@@ -64,12 +74,14 @@ SAMPLES = {
         tuple(
             (
                 (date(2025, 4, 1) + timedelta(days=i)).isoformat(),
+                i + 1,
                 None if 19 <= i <= 22 else round(17 + i * 0.12 + 3 * sin(i / 3), 1),
                 round(9 + i * 0.08 + 2 * cos(i / 4), 1),
             )
             for i in range(60)
         ),
         "Daily temperatures in °C. Four consecutive high readings are missing.",
-        True,
+        time_axis=True,
+        extra_dimensions=("Day",),
     ),
 }
