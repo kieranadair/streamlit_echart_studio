@@ -1,8 +1,14 @@
 # ECharts Studio
 
-An interactive Apache ECharts option reference for line and bar charts, built with Streamlit. Open the app to explore a working chart with three bundled, illustrative datasets. Each dataset remembers its edits within the current browser session.
+An interactive Apache ECharts reference for line and bar charts, built with Streamlit. The app opens on a working bar chart with three bundled teaching datasets.
 
-Browse an option branch or search for a property or visual effect. Include a property to edit it, or remove it to let ECharts choose its default. Configure series to add a measure or switch it between bar and line. Each series remembers its type-specific styles. The preview and the expandable JSON view use the same option.
+## Explore an option
+
+Choose a branch tab or search for a property by name or visual effect. Expanded groups show the hierarchy, such as `title.textStyle` and `series.emphasis.itemStyle`. Each row shows its current value beside its description. An edit updates the chart and marks the row as configured. Reset the row, or return a literal to its default, to omit that property. Automatic values such as `barWidth` stay unset until edited. Optional branches can be turned off while retaining their edits for the session.
+
+The same pandas DataFrame supplies the data preview and the chart's `dataset.source`. Each Y field creates a series. Choose a shared X field under the preview or change `encode.x` for an individual series in the **series** tab. Distinct X fields get their own axes, connected through `series.xAxisIndex`. For example, in **Weather log**, add **Low** and map its X field to **Day** while **High** stays on **Date**. In the **xAxis** tab you can then edit each scale independently.
+
+**View ECharts option**, beneath the editor, shows the Python option with `df` referring to the selected DataFrame. Streamlit transports the chart data using Arrow. [Streamlit ECharts API](https://docs.streamlit.io/develop/api-reference/charts/st.echarts_chart)
 
 ## Run locally
 
@@ -13,7 +19,7 @@ python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-For Streamlit Community Cloud select the repository branch containing the rebuild and the entrypoint `app.py`. The app requires Streamlit 1.67.0. Its teaching datasets are local, and its dependencies allow prebuilt NumPy wheels on Python 3.14.
+For Streamlit Community Cloud, select the branch containing the app and the entrypoint `app.py`.
 
 ## Development
 
@@ -22,4 +28,4 @@ python -m pip install pytest
 python -m pytest
 ```
 
-The editable property catalog lives in `echarts_studio/schema.py`. It covers a curated subset of native JSON-compatible ECharts options. Add an official path, example value, and hint to extend the explorer. The editor writes only explicitly included fields plus the chart's required structure. Data and document construction can be tested independently of Streamlit.
+The editable property catalog in `echarts_studio/schema.py` describes defaults for the built-in ECharts 6.1 renderer bundled with Streamlit 1.67.0. Each field has an official option path, a hint and a control type. A computed or inherited default has a placeholder explaining its behaviour. The chart uses `theme=None` so the controls follow the native ECharts defaults. [Apache ECharts option reference](https://echarts.apache.org/en/option.html)
