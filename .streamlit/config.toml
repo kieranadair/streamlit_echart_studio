@@ -1,5 +1,14 @@
 [theme]
-primaryColor = "#4C78A8"
 base = "light"
-[server]
-headless = true
+primaryColor = "#354DC4"
+backgroundColor = "#FBFBF9"
+secondaryBackgroundColor = "#F0F1F5"
+textColor = "#202538"
+borderColor = "#D6D9E3"
+codeBackgroundColor = "#F0F1F5"
+baseRadius = "8px"
+showWidgetBorder = true
+baseFontSize = 15
+headingFontSizes = ["36px", "28px", "21px", "18px", "16px", "14px"]
+headingFontWeights = [650, 620, 600, 600, 600, 600]
+paddingTop = "1.5rem"
