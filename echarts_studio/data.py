@@ -16,15 +16,40 @@ class Sample:
     time_axis: bool = False
 
     extra_dimensions: tuple[str, ...] = ()
+    measure_column: str = "Measure"
+    value_column: str = "Value"
 
     @property
     def columns(self):
         return (self.dimension, *self.extra_dimensions, *self.measures)
 
-    def dataframe(self) -> pd.DataFrame:
+    def dataframe(self, *, heatmap=False) -> pd.DataFrame:
         frame = pd.DataFrame(self.rows, columns=self.columns)
         if self.time_axis:
             frame[self.dimension] = pd.to_datetime(frame[self.dimension])
+        if heatmap:
+            if self.time_axis:
+                # Cartesian heatmaps use category labels on both axes.
+                frame[self.dimension] = frame[self.dimension].dt.strftime("%Y-%m-%d")
+            cells = (
+                frame.melt(
+                    id_vars=[self.dimension, *self.extra_dimensions],
+                    value_vars=self.measures,
+                    var_name=self.measure_column,
+                    value_name=self.value_column,
+                    ignore_index=False,
+                )
+                .sort_index(kind="stable")
+                .reset_index(drop=True)
+            )
+            frame = cells[
+                [
+                    self.dimension,
+                    self.measure_column,
+                    self.value_column,
+                    *self.extra_dimensions,
+                ]
+            ]
         return frame
 
 
@@ -67,6 +92,8 @@ SAMPLES = {
             ("Western Plains", 38, 31, 18),
         ),
         "Regional sales by channel, in thousands of dollars.",
+        measure_column="Channel",
+        value_column="Sales",
     ),
     "Weather log": Sample(
         "Date",
@@ -83,5 +110,19 @@ SAMPLES = {
         "Daily temperatures in °C. Four consecutive high readings are missing.",
         time_axis=True,
         extra_dimensions=("Day",),
+        measure_column="Reading",
+        value_column="Temperature",
     ),
+}
+
+
+# Each example opens with data that illustrates its bindings. Learners can
+# still switch datasets and keep an independent document for each combination.
+EXAMPLE_DATASETS = {
+    "Bar chart": "Monthly retail",
+    "Stacked bars": "Regional channels",
+    "Area chart": "Monthly retail",
+    "Scatter plot": "Regional channels",
+    "Bubble plot": "Regional channels",
+    "Heatmap": "Regional channels",
 }

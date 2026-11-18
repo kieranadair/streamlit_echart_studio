@@ -320,6 +320,95 @@ LINE = {
     "z": number(3, 0, 20, "Draw higher values in front of overlapping series."),
 }
 
+SCATTER = {
+    "symbol": choice(
+        "circle", "Choose the point marker shape.", *LINE["symbol"].choices
+    ),
+    "symbolSize": number(
+        10,
+        1,
+        80,
+        "Set a fixed marker size. A visualMap can vary the size by a numeric column.",
+        "px",
+    ),
+    "symbolRotate": number(
+        0, -180, 180, "Rotate markers such as triangles or diamonds.", "°"
+    ),
+    "itemStyle.opacity": number(
+        0.8, 0.0, 1.0, "Reveal overlapping points by changing their opacity."
+    ),
+    "label.position": label_position("inside"),
+    "z": number(2, 0, 20, "Draw higher values in front of overlapping series."),
+}
+HEATMAP = {
+    "itemStyle.borderRadius": number(
+        0, 0, 40, "Round the corners of each heatmap cell.", "px"
+    ),
+    "label.position": label_position("inside"),
+    "z": number(2, 0, 20, "Draw higher values in front of overlapping series."),
+}
+
+SERIES_SPECIFIC = {"bar": BAR, "line": LINE, "scatter": SCATTER, "heatmap": HEATMAP}
+
+SERIES_FIELDS = {
+    "bar": BAR | COMMON_SERIES,
+    "line": LINE | COMMON_SERIES,
+    "scatter": SCATTER
+    | {k: v for k, v in COMMON_SERIES.items() if k not in SCATTER and k != "stack"},
+    "heatmap": HEATMAP
+    | {
+        k: v
+        for k, v in COMMON_SERIES.items()
+        if k not in ("stack", "itemStyle.color")
+        and not k.startswith(("markLine.", "markPoint."))
+    },
+}
+
+VISUAL_MAP_STYLE = {
+    "show": flag(
+        True, "Show the scale legend. Hiding it keeps the visual mapping active."
+    ),
+    "calculable": flag(
+        False, "Drag the scale handles to highlight a range of observations."
+    ),
+    "orient": choice("vertical", "Lay out the scale legend.", "vertical", "horizontal"),
+    "left": choice(
+        None,
+        "Position the scale legend horizontally.",
+        "left",
+        "center",
+        "right",
+        placeholder="Left edge · 0 px",
+    ),
+    "inverse": flag(False, "Reverse the direction of the scale legend."),
+}
+
+
+def visual_map_fields(kind):
+    # These bindings are written explicitly, including the data-derived domain.
+    channel = (
+        ("inRange.color", "Choose colours for the lowest and highest cell values.")
+        if kind == "heatmap"
+        else (
+            "inRange.symbolSize",
+            "Map low and high values to marker sizes in pixels.",
+        )
+    )
+    return {
+        path: Property(None, hint, "binding")
+        for path, hint in (
+            ("seriesIndex", "Choose which series receives the mapping."),
+            (
+                "dimension",
+                "Select the numeric DataFrame column that drives point size or cell colour.",
+            ),
+            ("min", "Set the low end of the mapping domain."),
+            ("max", "Set the high end of the mapping domain."),
+            channel,
+        )
+    } | VISUAL_MAP_STYLE
+
+
 COMPONENTS = {
     "grid": {
         edge: Property(
@@ -441,7 +530,7 @@ COMPONENTS = {
 OPTIONAL_BRANCHES = tuple(COMPONENTS)
 
 
-def catalog(kind, x_type, multiple_x=False):
+def catalog(kind, x_type, multiple_x=False, *, mapping_kind=None):
     x_fields = axis_properties(x_type)
     x_fields["position"] = choice(
         None,
@@ -450,14 +539,19 @@ def catalog(kind, x_type, multiple_x=False):
         "top",
         placeholder="Auto · available edge" if multiple_x else "Auto · bottom edge",
     )
-    y_fields = axis_properties("value")
+    y_fields = axis_properties("category" if kind == "heatmap" else "value")
+    if kind == "heatmap":
+        # Cartesian heatmap cells need bands along both category axes.
+        x_fields.pop("boundaryGap", None)
+        y_fields.pop("boundaryGap", None)
     y_fields["position"] = choice(
         "left", "Choose the vertical axis edge.", "left", "right"
     )
     return {
-        "series": (BAR if kind == "bar" else LINE) | COMMON_SERIES,
+        "series": SERIES_FIELDS[kind],
         "xAxis": x_fields,
         "yAxis": y_fields,
+        **({"visualMap": visual_map_fields(mapping_kind)} if mapping_kind else {}),
         **COMPONENTS,
     }
 

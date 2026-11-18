@@ -7,10 +7,45 @@ from typing import Literal, TypedDict
 import streamlit as st
 
 from .options import axis_type
-from .schema import OPTIONAL_BRANCHES, catalog, matches
+from .schema import OPTIONAL_BRANCHES, VISUAL_MAP_STYLE, catalog, matches
+
+
+def _change_heatmap_axis(doc, axis, key):
+    # Swapping Channel and Region must keep each cell uniquely addressable.
+    other = "category_y" if axis == "shared_x" else "shared_x"
+    column = st.session_state[key]
+    if column == getattr(doc, other):
+        setattr(doc, other, getattr(doc, axis))
+    setattr(doc, axis, column)
 
 
 def data_bindings(doc, frame, sample, key):
+    if doc.category_y is not None:
+        categories = frame.select_dtypes(exclude="number").columns.tolist()
+        x_col, y_col, value_col = st.columns(3)
+        for container, axis, label in (
+            (x_col, "shared_x", "X category · encode.x"),
+            (y_col, "category_y", "Y category · encode.y"),
+        ):
+            widget = f"{key}:{axis}"
+            _sync(widget, getattr(doc, axis))
+            container.selectbox(
+                label,
+                categories,
+                key=widget,
+                on_change=_change_heatmap_axis,
+                args=(doc, axis, widget),
+            )
+        numeric = list(doc.series)
+        value = value_col.selectbox(
+            "Cell value · encode.value",
+            numeric,
+            index=numeric.index(doc.measures[0]),
+            key=key + ":cell-value",
+            help="visualMap maps this column to the cell colour.",
+        )
+        doc.measures = [value]
+        return
     x_col, y_col = st.columns(2)
     columns = frame.columns.tolist()
     doc.shared_x = x_col.selectbox(
@@ -44,12 +79,13 @@ def _series_controls(doc, measure, frame, key):
     )
     series = doc.series[measure]
     type_key = f"{key}:{measure}:type"
-    kinds = ["bar", "line"]
+    kinds = ["bar", "line", "scatter"]
     col2.selectbox(
         "series.type",
         kinds,
         index=kinds.index(series.kind),
         key=type_key,
+        help="These series can share an X/Y chart. Choose the Heatmap starting example for a two-category matrix.",
         on_change=_write_attribute,
         args=(series, "kind", type_key),
     )
@@ -67,6 +103,16 @@ def _series_controls(doc, measure, frame, key):
         args=(series, "x_override", x_key),
         help="Use a separate X field for this series. Each distinct X field gets its own horizontal axis.",
     )
+
+    if series.kind == "scatter":
+        if series.mapping.dimension:
+            st.caption(
+                f"Point size is mapped to **{series.mapping.dimension}** in the visualMap tab."
+            )
+        else:
+            st.caption(
+                "Choose a dimension in the visualMap tab to size points by a field."
+            )
 
 
 def _literal(value):
@@ -242,6 +288,120 @@ def _focused(widget_key, options):
     return current if current in options else next(iter(options), None)
 
 
+def _set_limit(mapping, column, observed, index, key):
+    limits = list(mapping.domains.get(column, observed))
+    value = st.session_state[key]
+    limits[index] = observed[index] if value is None else value
+    if limits[0] >= limits[1]:
+        st.toast("visualMap.min must be smaller than visualMap.max.")
+    elif tuple(limits) == observed:
+        mapping.domains.pop(column, None)
+    else:
+        mapping.domains[column] = tuple(limits)
+
+
+def _visual_map_controls(doc, frame, targets, focused, key, paths):
+    target = targets[0]
+    if len(targets) > 1:
+        target = st.selectbox(
+            "Target series · seriesIndex",
+            targets,
+            index=targets.index(focused) if focused in targets else 0,
+            format_func=lambda m: f"{m} · series[{doc.measures.index(m)}]",
+            key=key + ":map-target",
+        )
+    else:
+        st.caption(
+            f"`visualMap.seriesIndex = {doc.measures.index(target)}` targets **{target}**."
+        )
+    mapping = doc.series[target].mapping
+    scope = f"{key}:visualMap:{target}"
+    heatmap = doc.category_y is not None
+    if heatmap:
+        column = target
+    else:
+        fixed = "Fixed series.symbolSize"
+        options = [fixed, *frame.select_dtypes("number").columns]
+        selected = st.selectbox(
+            "Size field · visualMap.dimension",
+            options,
+            index=options.index(mapping.dimension or fixed),
+            key=scope + ":dimension",
+            help="Choose a numeric field to enable bubble sizing. Return to fixed size to remove this mapping.",
+        )
+        mapping.dimension = None if selected == fixed else selected
+        if mapping.dimension is None:
+            return
+        column = mapping.dimension
+
+    if "dimension" in paths:
+        role = "cell colour" if heatmap else "point size"
+        st.caption(
+            f"`visualMap.dimension = {frame.columns.get_loc(column)}` maps **{column}** to {role}. DataFrame column indices start at zero."
+        )
+    if paths & {"min", "max"}:
+        observed = mapping.data_range(frame[column])
+        limits = mapping.domains.get(column, observed)
+        low, high = st.columns(2)
+        for i, container, prop in ((0, low, "min"), (1, high, "max")):
+            if prop in paths:
+                widget = f"{scope}:{column}:{prop}"
+                _sync(widget, limits[i])
+                container.number_input(
+                    f"visualMap.{prop}",
+                    value=None,
+                    step=0.1,
+                    key=widget,
+                    on_change=_set_limit,
+                    args=(mapping, column, observed, i, widget),
+                )
+        st.caption(
+            f"This example starts at **{observed[0]:g}–{observed[1]:g}** for {column}. "
+            "ECharts defaults to 0–200 when both limits are omitted. "
+            "[Scale limits](https://echarts.apache.org/en/option.html#visualMap-continuous.min)"
+        )
+        if column in mapping.domains:
+            st.button(
+                "Use data range",
+                key=scope + ":reset-range",
+                type="tertiary",
+                on_click=mapping.domains.pop,
+                args=(column, None),
+            )
+    if "inRange.symbolSize" in paths:
+        mapping.sizes = st.slider(
+            "visualMap.inRange.symbolSize (px)",
+            1,
+            80,
+            mapping.sizes,
+            key=scope + ":sizes",
+            help="Marker sizes for the low and high ends of the scale. For circles these are diameters in pixels.",
+        )
+    if "inRange.color" in paths:
+        low, high = st.columns(2)
+        mapping.colours = (
+            low.color_picker(
+                "inRange.color[0] · low", mapping.colours[0], key=scope + ":low-colour"
+            ).lower(),
+            high.color_picker(
+                "inRange.color[1] · high",
+                mapping.colours[1],
+                key=scope + ":high-colour",
+            ).lower(),
+        )
+
+    active = [
+        m for m in targets if heatmap or doc.series[m].mapping.dimension is not None
+    ]
+    prefix = f"visualMap[{active.index(target)}]" if len(active) > 1 else "visualMap"
+    rows = {
+        p: (spec, mapping.settings)
+        for p, spec in VISUAL_MAP_STYLE.items()
+        if p in paths
+    }
+    _render_groups(rows, scope, prefix, "visualMap-continuous", True)
+
+
 def property_editor(doc, frame, key):
     query = st.text_input(
         "Find a property",
@@ -255,8 +415,12 @@ def property_editor(doc, frame, key):
     series = doc.series.get(measure)
     x_fields = doc.x_fields()
     x_field = _focused(key + ":axis", x_fields)
+    targets = [m for m in doc.measures if doc.series[m].kind in ("scatter", "heatmap")]
     sections = catalog(
-        series.kind if series else "bar", axis_type(frame[x_field]), len(x_fields) > 1
+        series.kind if series else "bar",
+        axis_type(frame[x_field]),
+        len(x_fields) > 1,
+        mapping_kind=doc.series[targets[0]].kind if targets else None,
     )
     visible = matches(sections, query)
     branches = list(dict.fromkeys(section for section, _ in visible))
@@ -269,12 +433,21 @@ def property_editor(doc, frame, key):
         if not tab.open:
             continue
         with tab, st.container(height=505, border=False):
+            if branch == "visualMap":
+                paths = {p for section, p in visible if section == branch}
+                _visual_map_controls(doc, frame, targets, measure, key, paths)
+                continue
             enabled = True
             if branch == "series":
                 if series is None:
                     st.info("Choose a Y field above to create a series.")
                     continue
-                _series_controls(doc, measure, frame, key)
+                if doc.category_y is None:
+                    _series_controls(doc, measure, frame, key)
+                else:
+                    st.caption(
+                        "`series.type = 'heatmap'` · Each DataFrame row supplies one cell."
+                    )
                 scope = f"{key}:series:{measure}:{series.kind}"
                 prefix = f"series[{doc.measures.index(measure)}]"
                 reference = f"series-{series.kind}"
