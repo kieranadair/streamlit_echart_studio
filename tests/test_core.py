@@ -1,11 +1,12 @@
 import json
 
 import pandas as pd
+import pyarrow as pa
 import pytest
 from streamlit.testing.v1 import AppTest
 
 from echarts_studio.data import SAMPLES
-from echarts_studio.options import Document, option_code
+from echarts_studio.options import Document, VisualMapping, option_code
 from echarts_studio.schema import catalog, matches
 
 
@@ -193,3 +194,164 @@ def test_colour_picker_initialisation_preserves_automatic_colour():
     app.button(key=key + ":reset").click().run()
     assert app.text_input(key=key).value == ""
     assert "itemStyle" not in chart(app)["series"][0]
+
+
+@pytest.mark.parametrize("name", SAMPLES)
+def test_heatmap_has_one_row_per_cell(name):
+    sample = SAMPLES[name]
+    wide = sample.dataframe()
+    cells = sample.dataframe(heatmap=True)
+    assert len(cells) == len(wide) * len(sample.measures)
+    assert not cells.duplicated([sample.dimension, sample.measure_column]).any()
+    assert list(cells[sample.measure_column].unique()) == list(sample.measures)
+    assert not pd.api.types.is_datetime64_any_dtype(cells[sample.dimension])
+    for measure in sample.measures:
+        values = cells.loc[cells[sample.measure_column] == measure, sample.value_column]
+        pd.testing.assert_series_equal(
+            values.reset_index(drop=True),
+            wide[measure],
+            check_dtype=False,
+            check_names=False,
+        )
+    option = Document.for_sample(sample, "Heatmap", cells).build(cells)
+    assert option["dataset"]["source"] is cells
+    assert option["visualMap"]["dimension"] == cells.columns.get_loc(
+        sample.value_column
+    )
+    assert (option["visualMap"]["min"], option["visualMap"]["max"]) == (
+        cells[sample.value_column].min(),
+        cells[sample.value_column].max(),
+    )
+
+
+def test_stack_and_fill_use_editable_line_and_bar_options():
+    app = AppTest.from_file("../app.py").run()
+    app.selectbox(key="example").select("Stacked bars").run()
+    assert [s["stack"] for s in chart(app)["series"]] == ["total"] * 3
+    app.button(
+        key="Regional channels:Stacked bars:series:Stores:bar:stack:reset"
+    ).click().run()
+    assert [s.get("stack") for s in chart(app)["series"]] == [None, "total", "total"]
+    app.selectbox(key="example").select("Area chart").run()
+    assert chart(app)["series"][0]["type"] == "line"
+    assert chart(app)["series"][0]["areaStyle"] == {"opacity": 0.35}
+    app.button(
+        key="Monthly retail:Area chart:series:Revenue:line:areaStyle.opacity:reset"
+    ).click().run()
+    assert "areaStyle" not in chart(app)["series"][0]
+    app.selectbox(key="example").select("Stacked bars").run()
+    assert [s.get("stack") for s in chart(app)["series"]] == [None, "total", "total"]
+
+
+def test_visual_maps_follow_series_indices_and_keep_type_specific_edits():
+    sample = SAMPLES["Regional channels"]
+    df = sample.dataframe()
+    doc = Document.for_sample(sample, "Scatter plot")
+    assert "visualMap" not in doc.build(df)
+    doc.measures = ["Stores", "Online", "Wholesale"]
+    online, wholesale = doc.series["Online"], doc.series["Wholesale"]
+    online.scatter["symbol"] = "diamond"
+    online.common["stack"] = "sales"
+    online.mapping.dimension = "Wholesale"
+    wholesale.kind = "scatter"
+    wholesale.mapping.dimension = "Online"
+    option = doc.build(df)
+    assert [(m["seriesIndex"], m["dimension"]) for m in option["visualMap"]] == [
+        (1, 3),
+        (2, 2),
+    ]
+    assert option["series"][1]["symbol"] == "diamond"
+    assert "stack" not in option["series"][1]
+    online.kind = "bar"
+    doc.measures = ["Wholesale", "Online"]
+    option = doc.build(df)
+    assert option["visualMap"]["seriesIndex"] == 0
+    assert option["series"][1]["stack"] == "sales"
+    assert "symbol" not in option["series"][1]
+    doc.measures = ["Online"]
+    assert "visualMap" not in doc.build(df)
+    online.kind = "scatter"
+    assert doc.build(df)["visualMap"]["dimension"] == 3
+
+
+def test_bubble_controls_restore_fixed_size_and_per_column_domains():
+    app = AppTest.from_file("../app.py").run()
+    app.selectbox(key="example").select("Bubble plot").run()
+    key = "Regional channels:Bubble plot:visualMap:Online:"
+    option = chart(app)
+    assert option["series"][0]["encode"] == {
+        "x": "Stores",
+        "y": "Online",
+        "itemName": "Region",
+        "tooltip": ["Region", "Stores", "Online", "Wholesale"],
+    }
+    assert option["xAxis"]["type"] == option["yAxis"]["type"] == "value"
+    assert option["visualMap"]["inRange"] == {"symbolSize": [8, 36]}
+    app.slider(key=key + "sizes").set_range(12, 55).run()
+    app.number_input(key=key + "Wholesale:min").set_value(10.0).run()
+    app.number_input(key=key + "Wholesale:min").set_value(90.0).run()
+    assert (
+        chart(app)["visualMap"]["min"]
+        == app.number_input(key=key + "Wholesale:min").value
+        == 10.0
+    )
+    app.selectbox(key=key + "dimension").select("Stores").run()
+    assert chart(app)["visualMap"]["min"] == 38
+    app.selectbox(key=key + "dimension").select("Wholesale").run()
+    assert chart(app)["visualMap"]["min"] == 10
+    app.button(key=key + "reset-range").click().run()
+    assert chart(app)["visualMap"]["min"] == 18
+    app.selectbox(key=key + "dimension").select("Fixed series.symbolSize").run()
+    assert "visualMap" not in chart(app)
+    open_branch(app, "series")
+    app.number_input(
+        key="Regional channels:Bubble plot:series:Online:scatter:symbolSize"
+    ).set_value(17).run()
+    assert chart(app)["series"][0]["symbolSize"] == 17
+    open_branch(app, "visualMap")
+    app.selectbox(key=key + "dimension").select("Wholesale").run()
+    assert chart(app)["visualMap"]["inRange"] == {"symbolSize": [12, 55]}
+
+
+def test_heatmap_widgets_preview_and_native_arrow_transport():
+    app = AppTest.from_file("../app.py").run()
+    app.selectbox(key="example").select("Heatmap").run()
+    key = "Regional channels:Heatmap:"
+    option = chart(app)
+    dataset = app.get("echarts_chart")[0].proto.datasets[0]
+    assert option["dataset"]["source"] == {"name": dataset.name}
+    native_df = pa.ipc.open_stream(dataset.data.data).read_pandas()
+    pd.testing.assert_frame_equal(
+        native_df, SAMPLES["Regional channels"].dataframe(heatmap=True)
+    )
+    pd.testing.assert_frame_equal(native_df.head(3), app.dataframe[0].value)
+    assert option["series"][0]["encode"] == {
+        "x": "Channel",
+        "y": "Region",
+        "value": "Sales",
+    }
+    assert option["xAxis"]["type"] == option["yAxis"]["type"] == "category"
+    app.color_picker(key=key + "visualMap:Sales:high-colour").set_value("#b82c3b").run()
+    app.toggle(key=key + "visualMap:Sales:show").set_value(False).run()
+    assert chart(app)["visualMap"]["inRange"]["color"][1] == "#b82c3b"
+    assert chart(app)["visualMap"]["show"] is False
+    app.selectbox(key=key + "shared_x").select("Region").run()
+    assert app.selectbox(key=key + "category_y").value == "Channel"
+    assert chart(app)["series"][0]["encode"]["y"] == "Channel"
+    app.selectbox(key=key + "category_y").select("Region").run()
+    assert chart(app)["series"][0]["encode"]["x"] == "Channel"
+    app.selectbox(key="Heatmap:dataset").select("Weather log").run()
+    app.selectbox(key="Weather log:Heatmap:cell-value").select("Day").run()
+    assert chart(app)["series"][0]["encode"]["value"] == "Day"
+    assert chart(app)["series"][0]["label"]["formatter"] == "{@Day}"
+    assert chart(app)["visualMap"]["dimension"] == 3
+    assert chart(app)["visualMap"]["max"] == 60
+    app.selectbox(key="example").select("Bubble plot").run()
+    app.selectbox(key="example").select("Heatmap").run()
+    assert app.selectbox(key="Heatmap:dataset").value == "Weather log"
+    assert chart(app)["series"][0]["encode"]["value"] == "Day"
+
+
+def test_visual_map_constant_and_empty_domains():
+    assert VisualMapping.data_range(pd.Series([4.0, None, 4.0])) == (4, 5)
+    assert VisualMapping.data_range(pd.Series([float("nan")])) == (0, 1)
