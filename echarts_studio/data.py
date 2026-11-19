@@ -125,4 +125,10 @@ EXAMPLE_DATASETS = {
     "Scatter plot": "Regional channels",
     "Bubble plot": "Regional channels",
     "Heatmap": "Regional channels",
+    "Rank the regions": "Regional channels",
+    "Benchmarks and bands": "Monthly retail",
+    "Linear fit": "Regional channels",
+    "Moving average": "Monthly retail",
+    "Linked panels": "Monthly retail",
+    "Responsive layout": "Monthly retail",
 }

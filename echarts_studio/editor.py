@@ -6,7 +6,8 @@ from typing import Literal, TypedDict
 
 import streamlit as st
 
-from .options import axis_type
+from . import controls
+from .controls import sync as _sync
 from .schema import OPTIONAL_BRANCHES, VISUAL_MAP_STYLE, catalog, matches
 
 
@@ -46,21 +47,28 @@ def data_bindings(doc, frame, sample, key):
         )
         doc.measures = [value]
         return
-    x_col, y_col = st.columns(2)
+    doc.horizontal = st.toggle(
+        "Swap X and Y",
+        doc.horizontal,
+        key=key + ":horizontal",
+        help="Put measures on X and their shared dimension on Y. Bar series become horizontal.",
+    )
+    left, right = st.columns(2)
+    x_col, y_col = (right, left) if doc.horizontal else (left, right)
     columns = frame.columns.tolist()
     doc.shared_x = x_col.selectbox(
-        "Shared X field · encode.x",
+        "Shared Y field · encode.y" if doc.horizontal else "Shared X field · encode.x",
         columns,
         index=columns.index(doc.shared_x),
         key=key + ":shared-x",
-        help="Each series uses this column unless you override encode.x in the series tab.",
+        help="Each series uses this dimension unless you override its binding in the series tab.",
     )
     doc.measures = y_col.multiselect(
-        "Y fields · encode.y",
+        "X fields · encode.x" if doc.horizontal else "Y fields · encode.y",
         sample.measures,
         default=doc.measures,
         key=key + ":measures",
-        help="Each selected measure creates one series. Its encode.y names this DataFrame column.",
+        help="Each selected measure creates one series.",
     )
 
 
@@ -92,7 +100,7 @@ def _series_controls(doc, measure, frame, key):
     x_key = f"{key}:{measure}:encode.x"
     fields = [None, *frame.columns]
     col3.selectbox(
-        "encode.x",
+        "encode.y" if doc.horizontal else "encode.x",
         fields,
         index=fields.index(series.x_override),
         key=x_key,
@@ -101,7 +109,7 @@ def _series_controls(doc, measure, frame, key):
         ),
         on_change=_write_attribute,
         args=(series, "x_override", x_key),
-        help="Use a separate X field for this series. Each distinct X field gets its own horizontal axis.",
+        help="Use a separate dimension for this series. Each distinct dimension gets its own axis.",
     )
 
     if series.kind == "scatter":
@@ -122,6 +130,8 @@ def _literal(value):
 
 
 def _widget_value(spec, value):
+    if spec.kind == "feature":
+        return isinstance(value, dict)
     if spec.kind == "percent":
         return None if value is None else int(value.removesuffix("%"))
     if spec.kind == "statistic":
@@ -134,6 +144,8 @@ def _widget_value(spec, value):
 
 
 def _option_value(spec, value):
+    if spec.kind == "feature":
+        return {} if value else None
     if value is None or value == "":
         return None
     if spec.kind == "percent":
@@ -168,13 +180,6 @@ def _pick_color(values, path, spec, key, initial):
         _commit(values, path, spec, key)
 
 
-def _sync(key, value):
-    # The document owns edits across hidden tabs. A reset only changes the
-    # document; bring its widget back into sync before registering the widget.
-    if key not in st.session_state or st.session_state[key] != value:
-        st.session_state[key] = value
-
-
 class WidgetArgs(TypedDict):
     key: str
     label_visibility: Literal["collapsed"]
@@ -202,7 +207,7 @@ def _input(spec, values, path, label, key, disabled):
             format_func=_literal,
             **kwargs,
         )
-    elif spec.kind == "bool":
+    elif spec.kind in ("bool", "feature"):
         st.toggle(label, **kwargs)
     elif spec.kind in ("number", "percent"):
         lo, hi = spec.bounds
@@ -319,6 +324,14 @@ def _visual_map_controls(doc, frame, targets, focused, key, paths):
     heatmap = doc.category_y is not None
     if heatmap:
         column = target
+        if paths & {"type", "pieces", "min", "max", "inRange.color", "calculable"}:
+            mapping.kind = controls.select(
+                st,
+                "visualMap.type",
+                ["continuous", "piecewise"],
+                mapping.kind,
+                scope + ":type",
+            )
     else:
         fixed = "Fixed series.symbolSize"
         options = [fixed, *frame.select_dtypes("number").columns]
@@ -339,7 +352,16 @@ def _visual_map_controls(doc, frame, targets, focused, key, paths):
         st.caption(
             f"`visualMap.dimension = {frame.columns.get_loc(column)}` maps **{column}** to {role}. DataFrame column indices start at zero."
         )
-    if paths & {"min", "max"}:
+    piecewise = heatmap and mapping.kind == "piecewise"
+    if piecewise and paths & {"type", "pieces"}:
+        controls.piece_controls(mapping, frame, column, scope)
+    elif piecewise and paths & {"min", "max", "inRange.color", "calculable"}:
+        st.caption(
+            "Choose continuous to edit the scale limits, gradient or draggable handles."
+        )
+    elif not piecewise and "pieces" in paths and "type" not in paths:
+        st.caption("Choose piecewise to edit the colour bands.")
+    if not piecewise and paths & {"min", "max"}:
         observed = mapping.data_range(frame[column])
         limits = mapping.domains.get(column, observed)
         low, high = st.columns(2)
@@ -377,7 +399,7 @@ def _visual_map_controls(doc, frame, targets, focused, key, paths):
             key=scope + ":sizes",
             help="Marker sizes for the low and high ends of the scale. For circles these are diameters in pixels.",
         )
-    if "inRange.color" in paths:
+    if not piecewise and "inRange.color" in paths:
         low, high = st.columns(2)
         mapping.colours = (
             low.color_picker(
@@ -397,9 +419,106 @@ def _visual_map_controls(doc, frame, targets, focused, key, paths):
     rows = {
         p: (spec, mapping.settings)
         for p, spec in VISUAL_MAP_STYLE.items()
-        if p in paths
+        if p in paths and not (piecewise and p == "calculable")
     }
-    _render_groups(rows, scope, prefix, "visualMap-continuous", True)
+    _render_groups(
+        rows,
+        scope,
+        prefix,
+        "visualMap-piecewise" if piecewise else "visualMap-continuous",
+        True,
+    )
+
+
+def _axis_controls(doc, frame, branch, dimension, key, paths):
+    fields = doc.x_fields()
+    per_dimension = branch == doc.dimension_axis
+    if per_dimension and len(fields) > 1:
+        st.selectbox(
+            f"Edit {branch[0].upper()} axis",
+            fields,
+            index=fields.index(dimension),
+            key=key + ":axis",
+            persist_state="page",
+        )
+    scope = f"{key}:{branch}" + (f":{dimension}" if per_dimension else "")
+    if doc.horizontal:
+        scope += ":horizontal"
+    values = doc.axis_settings(branch, dimension)
+    inferred = doc.inferred_axis_type(branch, dimension, frame)
+    kind = doc.axis_kind(branch, dimension, frame)
+    prefix = (
+        f"{branch}[{fields.index(dimension)}]"
+        if per_dimension and len(fields) > 1
+        else branch
+    )
+    if doc.panels and "grid" in doc.enabled and len(doc.measures) > 1:
+        prefix = branch
+        st.caption("These settings apply to the matching axes across panels.")
+    if per_dimension:
+        st.caption(f"`encode.{branch[0]} = {dimension!r}` · `{branch}.type = {kind!r}`")
+    if "type" in paths:
+        if doc.category_y:
+            st.caption("Cartesian heatmaps use category bands on both axes.")
+        else:
+            kinds = list(dict.fromkeys([inferred, "category"]))
+            widget = scope + ":type"
+            _sync(widget, kind)
+
+            def set_type():
+                choice = st.session_state[widget]
+                if choice == inferred:
+                    values.pop("type", None)
+                else:
+                    values["type"] = choice
+
+            st.selectbox(
+                f"{prefix}.type",
+                kinds,
+                key=widget,
+                on_change=set_type,
+                help="The initial type follows the bound field. A numeric or date dimension can also be shown as categories.",
+            )
+    return scope, prefix, values
+
+
+def _component_bindings(branch, doc, key, paths, enabled):
+    if branch == "Chart" and "color" in paths:
+        with st.expander("Series palette · color", expanded=len(paths) == 1):
+            controls.palette_controls(doc.components["Chart"], key)
+    elif branch == "grid" and paths & {"gridIndex", "axisPointer.link"}:
+        controls.layout_controls(doc, key, enabled)
+    elif branch == "media":
+        controls.media_controls(doc, key, enabled)
+    elif branch == "graphic" and "elements" in paths:
+        col, inset = st.columns(2)
+        doc.note_corner = controls.select(
+            col,
+            "Canvas corner",
+            ["Top left", "Top right", "Bottom left", "Bottom right"],
+            doc.note_corner,
+            key + ":corner",
+            disabled=not enabled,
+        )
+        doc.note_inset = inset.slider(
+            "Edge inset (%)",
+            0,
+            25,
+            doc.note_inset,
+            key=key + ":inset",
+            disabled=not enabled,
+        )
+    elif branch == "brush" and "toolbox" in paths:
+        doc.brush_tools = st.multiselect(
+            "Brush tools",
+            ["rect", "polygon"],
+            default=doc.brush_tools,
+            key=key + ":tools",
+            disabled=not enabled,
+            help="Pick a shape in the chart toolbar, then drag across the marks. Clear removes the selection.",
+        )
+        if not any(doc.series[m].kind in ("bar", "scatter") for m in doc.measures):
+            st.caption("Select a bar or scatter series to brush its marks.")
 
 
 def property_editor(doc, frame, key):
@@ -413,13 +532,14 @@ def property_editor(doc, frame, key):
     )
     measure = _focused(key + ":active", doc.measures)
     series = doc.series.get(measure)
-    x_fields = doc.x_fields()
-    x_field = _focused(key + ":axis", x_fields)
+    fields = doc.x_fields()
+    dimension = _focused(key + ":axis", fields)
     targets = [m for m in doc.measures if doc.series[m].kind in ("scatter", "heatmap")]
     sections = catalog(
         series.kind if series else "bar",
-        axis_type(frame[x_field]),
-        len(x_fields) > 1,
+        doc.axis_kind("xAxis", dimension, frame),
+        len(fields) > 1,
+        y_type=doc.axis_kind("yAxis", dimension, frame),
         mapping_kind=doc.series[targets[0]].kind if targets else None,
     )
     visible = matches(sections, query)
@@ -432,15 +552,20 @@ def property_editor(doc, frame, key):
     for tab, branch in zip(tabs, branches, strict=True):
         if not tab.open:
             continue
+        paths = [path for section, path in visible if section == branch]
         with tab, st.container(height=505, border=False):
-            if branch == "visualMap":
-                paths = {p for section, p in visible if section == branch}
-                _visual_map_controls(doc, frame, targets, measure, key, paths)
-                continue
             enabled = True
+            scope = f"{key}:{branch}"
+            prefix = reference = branch
+            if branch == "visualMap":
+                _visual_map_controls(doc, frame, targets, measure, key, set(paths))
+                continue
+            if branch == "dataset":
+                controls.dataset_controls(doc, frame, scope)
+                continue
             if branch == "series":
                 if series is None:
-                    st.info("Choose a Y field above to create a series.")
+                    st.info("Select a measure above to create a series.")
                     continue
                 if doc.category_y is None:
                     _series_controls(doc, measure, frame, key)
@@ -451,51 +576,38 @@ def property_editor(doc, frame, key):
                 scope = f"{key}:series:{measure}:{series.kind}"
                 prefix = f"series[{doc.measures.index(measure)}]"
                 reference = f"series-{series.kind}"
-            elif branch == "xAxis":
-                if len(x_fields) > 1:
-                    st.selectbox(
-                        "Edit X axis",
-                        x_fields,
-                        index=x_fields.index(x_field),
-                        key=key + ":axis",
-                        persist_state="page",
-                    )
-                scope = f"{key}:xAxis:{x_field}"
-                prefix = (
-                    f"xAxis[{x_fields.index(x_field)}]"
-                    if len(x_fields) > 1
-                    else "xAxis"
-                )
-                reference = "xAxis"
-                st.caption(
-                    f"`encode.x = {x_field!r}` · `{prefix}.type = {axis_type(frame[x_field])!r}`"
+                controls.series_bindings(doc, measure, frame, scope, paths, bool(query))
+                get_values = series.settings
+            elif branch in ("xAxis", "yAxis"):
+                scope, prefix, values = _axis_controls(
+                    doc, frame, branch, dimension, key, paths
                 )
             else:
-                scope = f"{key}:{branch}"
-                prefix = reference = "" if branch == "animation" else branch
                 if branch in OPTIONAL_BRANCHES:
                     enabled = st.toggle(
                         f"Include {branch} settings",
                         branch in doc.enabled,
-                        key=f"{key}:{branch}:enabled",
+                        key=scope + ":enabled",
                         help="Omit this branch while remembering its edits.",
                     )
                     if enabled:
                         doc.enabled.add(branch)
                     else:
                         doc.enabled.discard(branch)
-
-            rows = {}
-            for section, path in visible:
-                if section != branch:
-                    continue
-                if branch == "series":
-                    values = series.settings(path)
-                elif branch == "xAxis":
-                    values = doc.axes[x_field]
-                else:
-                    values = doc.components[branch]
-                rows[path] = (sections[branch][path], values)
+                if branch in ("Chart", "animation"):
+                    prefix = reference = ""
+                if branch == "graphic":
+                    prefix, reference = "graphic.elements[0]", "graphic.elements-text"
+                _component_bindings(branch, doc, scope, set(paths), enabled)
+                values = doc.components[branch]
+            rows = {
+                p: (
+                    sections[branch][p],
+                    get_values(p) if branch == "series" else values,
+                )
+                for p in paths
+                if sections[branch][p].kind != "binding"
+            }
             _render_groups(rows, scope, prefix, reference, enabled)
 
 
