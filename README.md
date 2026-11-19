@@ -2,6 +2,8 @@
 
 An interactive Apache ECharts reference built with Streamlit. Edit the option, see the chart respond, and inspect the Python that produced it. The app opens on a bar chart of monthly revenue.
 
+The [30 Days of Apache ECharts course design](docs/course/README.md) explains how Tableau users can learn the option through the builder. It includes the syllabus, teaching sources, worked lessons, and pilot plan.
+
 ## Starting examples
 
 | Example | What to try |
