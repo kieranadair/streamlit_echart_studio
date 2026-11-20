@@ -4,7 +4,7 @@ A course design for people who already make charts in Tableau and want comparabl
 
 ## The promise
 
-On day 1, a learner can answer “Did we miss our March revenue target?” by adding a target line to a working bar chart. On day 30, give them an unfamiliar chart brief and a new constraint. They can choose the data grain, build a view, trace one mark through the option to its source, and predict and verify a revision. They can use the official reference when they meet a property the course has never shown them.
+On day 1, reconcile an annual surplus with monthly misses, design a reliable hover comparison and diagnose a target line drawn in rank order. Each day targets about 30 minutes for an experienced visualisation practitioner, with three linked investigations and an independent handover. On day 30, give them an unfamiliar chart brief and a new constraint. They can choose the data grain, build a view, trace one mark through the option to its source, and predict and verify a revision. They can use the official reference when they meet a property the course has never shown them.
 
 Keep four questions in view when designing or changing a lesson.
 
@@ -19,7 +19,7 @@ Keep four questions in view when designing or changing a lesson.
 | --- | --- |
 | Deciding why or how to teach something | [Research and teaching decisions](research.md). Primary sources, both Streamlit repositories, and the design choices drawn from them. |
 | Choosing what belongs on a particular day | [30-day syllabus](syllabus.md). Six sections, starting states, experiments, checks, and the gradual withdrawal of hints. |
-| Writing a lesson | [Lesson authoring guide](lesson-guide.md). A reusable template and two worked lessons with predictions, hints, answer keys, and transfer tasks. |
+| Writing a lesson | [Lesson authoring guide](lesson-guide.md). A seven-part lesson structure and worked lessons with predictions, hints, answer keys, and transfer tasks. |
 | Helping a learner distinguish two plausible explanations | [Three contrasting cases](contrasting-cases.md). Similar-looking charts conceal different row orders, reference rules, or missing-data behaviour. |
 | Checking what the learner can actually do | [Studio field guide](studio-reference.md). Tableau-to-ECharts translation, inspection surfaces, current capability boundaries, and common diagnoses. |
 | Choosing a sample or verifying an expected result | [Dataset guide](datasets.md). Units, grain, known values, optional external sources, and proposed import choices. |
@@ -34,7 +34,7 @@ The full explorer stays available throughout. A lesson focuses attention through
 
 **Current baseline.** The course is designed against the merged builder at `626bf89`, which uses native `st.echarts_chart`, DataFrames in `dataset.source`, twelve starting examples, and three bundled samples. The named examples already exist. The day sequence, new data integrations, and course navigation are proposals. A short recipe can already establish each core lesson’s starting state. [Builder at the reference revision](https://github.com/kieranadair/streamlit_echart_studio/tree/626bf892b02642785cd2af13c411529ef29e5f45)
 
-To try the plan today, launch Studio, open **Bar chart** with **Monthly retail**, and follow day 1. The research, syllabus, and pilot cards are also readable directly on GitHub. [Run Studio locally](../../README.md#run-locally) · [Worked day 1](lesson-guide.md#worked-day-1)
+To try the plan today, launch Studio, open **Bar chart** with **Monthly retail**, and follow day 1. The research, syllabus, and pilot cards are also readable directly on GitHub. [Run Studio locally](../../README.md#run-locally) · [Day 1 · Read axes and encodings](day-01.md) · [Day 8 · Trace a transform](day-08.md)
 
 ## How to use this reference over time
 

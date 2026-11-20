@@ -6,8 +6,8 @@ The learner’s evidence is a working chart, an explanation that connects it to 
 
 | Day | Ask for | A variation that distinguishes understanding from imitation |
 | --- | --- | --- |
-| 5 | A two-series comparison and a trace from one mark to its row | Reverse which measure is a line. Ask whether either measure’s source values should change. |
-| 10 | A ranking explained in both table order and screen order | Ask for Stores above 61 after the learner has shown at least 61. Ask them to name the disappearing region before they edit. |
+| 5 | A two-series weather comparison with a shared scale, a non-colour cue and a trace to one dated row | Inspect a date with a missing High. Ask which properties govern identification and which observations actually exist. |
+| 10 | A ranking explained in both table order and screen order | Switch eligibility to Online ≥ 39 while preserving the Stores ranking. Ask how to expose a sort on the wrong field. |
 | 15 | A defensible encoding choice and an explanation of a colour boundary | Give the value exactly equal to the cutoff. Ask the learner to move the boundary and identify a second value whose colour should stay the same. |
 | 20 | An analytical claim plus its population, units, and calculation | Change the filter field while preserving the plotted measure. Ask *which observations* now inform the claim. |
 | 25 | A readable comparison at two widths, a text equivalent, and an explanation of layout ownership | Give a narrow chart in a wide browser. Ask which width controls `media.query` and how to test the answer. |
@@ -43,15 +43,13 @@ Record the five dimensions separately. A proposed sign of readiness is independe
 
 ## Pilot design
 
-**Participants and scope.** Invite three to five Tableau-proficient people who can explain an existing visualisation and are new to authoring ECharts options. Aim for some variation in coding experience, screen size, and input method. This is a proposed small qualitative pilot. Technical rehearsal has checked the builder and its data. Testing with learners is a later milestone.
+**Pilot learner.** Kieran works through the lessons in Studio and records his own evidence. His first run found days 1 and 8 too short and the distinction between axis types and field encodings unclear.
 
-**Session A, approximately 35–45 minutes.** Start with day 1 and a changed month. Then supply day 8’s ranked starting view and ask the learner to predict and check a filter. Observe whether the data preview and option readout help them recover from a wrong prediction. Let them try unaided before offering the first hint.
-
-**Session B, several days later, approximately 30–40 minutes.** Start with five minutes of reconstruction from the retail or ranking brief. Give half the group day 16 and the others day 25, providing the starting recipe for the skipped days. Finish with one previously unseen condition. This tests lesson design and retention of the early skill. A later ordered pilot covers all six sections and the capstone.
+**Next sessions.** Try the expanded [day 1](day-01.md) and [day 8](day-08.md) separately. Target about 30 active minutes per day. Record the time for each of the three loops and the handover separately. Note whether time went into analytical work, finding a control, or re-reading an instruction. If a day runs short and the transfer is easy, promote a harder case into the core. If navigation consumes the budget, clarify the starting state and retest. Mark where the option first made sense or still felt redundant. On another day, reconstruct one example without the recipe and try a changed condition. Later, use days 16 and 25 to test whether those explanations carry over.
 
 ### Two short pilot cards
 
-Use the [worked lessons](lesson-guide.md) for days 1 and 16. These companion cards supply the other two starting views.
+Use these as later recall prompts. The [full day 8 lesson](day-08.md) introduces the pipeline first.
 
 **Day 8 · Qualifying regions.** Open **Rank the regions** with Regional channels, descending Stores, and an empty filter. Tell the learner, “The manager will review regions with store sales of at least $60,000. How many bars do you expect, which region should be highest, and how would you check that the source still has six regions?” Give the learner time to experiment. If needed, point first to **dataset**, then to the filter dimension, operator, and value. After the check, ask for *above $61,000*.
 
@@ -65,7 +63,7 @@ Use the [worked lessons](lesson-guide.md) for days 1 and 16. These companion car
 
 ### Capturing and using pilot evidence
 
-**Observation sheet.** One row per task is sufficient. Collect notes with the participant’s agreement. Ordinary author notes can answer the pilot questions without a new analytics system.
+**Observation sheet.** One row per task is sufficient. Record your own predictions before revealing the checks. Ordinary author notes can answer the pilot questions without a new analytics system.
 
 | Day and starting state | Prediction in the learner’s words | First edit and evidence inspected | Highest hint used | Result on the changed case | Time, access issue, or ambiguity | Proposed revision |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -74,7 +72,7 @@ Use the [worked lessons](lesson-guide.md) for days 1 and 16. These companion car
 **How to act on observations.**
 
 - A disagreement between the answer key and the actual option or data calls for a technical correction and a replay of that example.
-- Two learners encountering the same navigation problem is a reason to revise the starting recipe or prompt and try it again. Consider a builder affordance when the friction persists with a clear recipe.
+- A navigation problem recurring on a fresh solo attempt is a reason to revise the starting recipe or prompt and try it again. Consider a builder affordance when the friction persists with a clear recipe.
 - If learners reproduce the demonstrated steps but fail the changed case, introduce a contrasting case or a self-explanation prompt. More controls on the page are unlikely to solve that learning problem.
 - Check the keyboard path to selectors, option text, and data tables. For hover or brush tasks, offer a text/data investigation of the same question and a companion demonstration of the gesture. Record which interactions were actually tested with assistive technology.
 - Report counts as counts, together with examples of learner reasoning. Use repeated independent explanations over the full course to judge the final outcome. Completion clicks alone measure navigation.

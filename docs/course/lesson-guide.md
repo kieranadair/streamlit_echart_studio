@@ -1,92 +1,44 @@
 # Writing and teaching a Studio lesson
 
-A day is a short investigation carried out in ECharts Studio. The learner should leave with one explanation they can use again. The [syllabus](syllabus.md) supplies the investigation. This guide gives authors a consistent way to teach it.
+Design for a practising visualisation professional learning a new platform. Give each day one consequential reader brief and three linked investigations in Studio. The learner should leave with a chart, a defensible decision and enough of the option to diagnose a changed case. The [syllabus](syllabus.md) specifies the three investigations and handover for every day.
 
-## The shape of a day
+## The seven parts of a lesson
 
-| Time to try in the pilot | What the learner does | What the author provides |
-| --- | --- | --- |
-| First 2 minutes | Opens a working chart and names a decision a reader could make. Recalls one relevant idea from an earlier day. | An exact starter, dataset, and any edits needed to reproduce the starting state in a fresh session. |
-| Next 2 minutes | Commits to a prediction about a mark, a row count, a coordinate, or an option path. | One question with a meaningful alternative prediction. A learner can record an answer on paper or say it aloud. |
-| Next 6–8 minutes | Changes one thing, observes the result, and inspects the smallest useful piece of the contract or data. | A short hint ladder and one way to recover from the most likely wrong turn. |
-| Last 5–8 minutes | Puts the idea to work on a second field, boundary, or audience. Checks a value and explains the result in ECharts terms. | A check the learner can reveal after trying, a link to the relevant part of the official reference, and a small reconstruction note for later. |
+1. **Meet the parameters.** Give the official path, its role, a concrete value, and its visible effect. Explain adjacent properties a learner could reasonably confuse.
+2. **Set the challenge.** Name a reader and the decision this chart should help them make.
+3. **Show the whole picture.** Present the finished comparison and its essential option fragment before taking it apart. In Studio, show the worked view when available.
+4. **Know the dataset.** Give the grain, units, and a few real rows the learner can trace.
+5. **Think it through.** Ask for a prediction, a reason, and an observation that could change their mind.
+6. **Build, observe, explain.** Make one change at a time. Check a row, a mark, and an option path. Include a boundary or recovery exercise, then change the brief and let the learner choose the controls.
+7. **Reflect.** Ask for an explanation that predicts a fresh case. Put the answer behind a reveal and link the relevant Apache reference.
 
-A learner who predicts incorrectly has something precise to investigate. Ask them to choose the next observation that would distinguish their explanation from another one. If a learner gets the result by chance, change the field or condition and ask for the next prediction.
+**Budget approximately 30 active minutes.** Spend about four minutes on parts 1–5 together. Put three challenge → action → reflection loops inside part 6, budgeting roughly seven, seven and eight minutes. Allow four minutes for an independent handover in part 7. Let a productive diagnosis run longer. Ask Kieran to record actual time on each loop.
 
-**Fade guidance deliberately.** On days 1–5 name both control and property. On days 6–15 give the task first and let learners reveal the branch. On days 16–25 ask for the mechanism and evidence before the recipe. On days 26–30 provide a reader brief and the references. A learner can request any hint early. Record which hint made the concept click during the pilot.
+In the first loop, build a result and reconcile it with the source. In the second, test a plausible competing interpretation or a deliberate fault. In the third, change the reader brief, population or viewing condition and let the learner choose the controls. After each, ask for a prediction that held or failed, the observation that decided it and the option path that explains it. Later lessons can open with the fault and use the final loop for reconstruction.
 
-## Copyable lesson template
-
-```markdown
-# Day NN · [Question a reader wants answered]
-
-**Starting state.** [Named example, dataset, bindings, optional branches,
-and a short fresh-session recipe. Include a previously learned idea to recall.]
-
-**Your task.** [A decision to make and one observable success condition.]
-
-**Predict.** [What will change? Give a specific mark, value, or option path.]
-
-**Try it in Studio.** [The smallest useful edit. Leave one choice to the learner.]
-
-**Find the evidence.** [One row or computed value, one native option path,
-and what the chart should let a reader see.]
-
-**If you get stuck.** [Hint 1 names the concept. Hint 2 gives the branch.
-Hint 3 gives the exact control and a recovery step.]
-
-**Try a changed case.** [New field, threshold, scale, or reader constraint.]
-
-<details>
-<summary>Check your reasoning</summary>
-
-[Expected outcome, acceptable alternatives, and a short explanation.
-Give a text or table route for checks that otherwise depend on colour or hover.]
-
-</details>
-
-**Take away.** [One sentence the learner completes and one reference link.]
-```
-
-A learner can use four lines in their own notes for the **starting state**, **prediction**, **evidence**, and **next variation**. Copy a short option fragment if it helps recreate the experiment. The complete chart and a screenshot are optional.
+Give more navigation help early and fade it as learners progress. Preserve conceptual explanations throughout. Measure how long each investigation actually takes during the solo pilot.
 
 ## Worked day 1
 
-**Learner brief.** You are preparing a retail review. Your colleague says March was on target. Use a single chart to check that claim, then explain how the same data supplies both marks.
+[Audit a monthly performance review](day-01.md) reconciles monthly and annual results, tests tooltip ordering and diagnoses a line drawn in rank order.
 
-**Start.** Open **Bar chart** with **Monthly retail**. Confirm Month is the shared X field and Revenue is the only Y field. In the preview locate the March row. Revenue and Target use thousands of dollars.
+## Worked day 8
 
-**Predict.** If you add Target, will March need another source row? Where should the target sit relative to the top of the March bar?
-
-**Try it.** Add Target under **Y fields · encode.y**. In **series**, set **Edit series** to Target and choose `line` for `series.type`. Leave Revenue as a bar. Give a colleague the decision before opening the option. Then open **View ECharts option** and find the two entries under `series`. These are the relevant fields from the starter after that edit.
-
-```python
-[
-    {"name": "Revenue", "type": "bar", "encode": {"x": "Month", "y": "Revenue"}},
-    {"name": "Target", "type": "line", "encode": {"x": "Month", "y": "Target"}},
-]
-```
-
-**Hints.** First ask which field would let a reader compare actual performance with expectation. Then look under the field selectors and the series tab. If both measures appear as bars, edit the series named Target. If Revenue became the line, select Revenue, return it to bar, and set Target to line.
-
-**Try a changed case.** Is February’s result the same? Remove Target from the selected fields. Predict whether the Target column will still be in the data preview. Restore it and explain where the choice to draw a line lives.
-
-<details>
-<summary>Check the values and the contract</summary>
-
-March shows 45 against 49, a shortfall of $4,000. February shows 48 against 46, $2,000 above target. The March observations share one source row. Both encodings read Month, while the two Y encodings choose different columns. Removing Target from the plotted measures leaves the source column available. The preview exposes both rows without requiring a hover gesture.
-
-</details>
-
-**Take away.** Finish “To find the value behind the Target line, I would follow …”. [Apache’s dataset and encoding guide](https://echarts.apache.org/handbook/en/concepts/dataset/)
+[Which regions qualify for review?](day-08.md) follows a source through a transform pipeline, tests an exact boundary, and separates eligibility, ranking and bar length.
 
 ## Worked day 16
 
+**Meet the parameters.** A fixed reference uses an axis coordinate such as `yAxis: 60`. A statistical reference uses `type` to choose a calculation and `valueDim` to choose its input field. The series’ `datasetIndex` selects the population. The dataset filter can test another column entirely.
+
 **Learner brief.** A manager asks whether raising the sales threshold for the months included in a report will also raise its fixed benchmark. There are two horizontal lines in the view. Decide which can move, and explain who computes the new value.
+
+**Whole picture.** Imagine a monthly Revenue view with a fixed policy line and a moving statistical comparator. The deliverable is the chart plus a population statement a manager can repeat when the filter changes.
 
 **Start.** Open **Benchmarks and bands** with **Monthly retail** and the full twelve months. Confirm Revenue is on Y and the reference lines are Benchmark and Mean. If revisiting an edited session, restore the Fixed Revenue line to 60, the statistical Revenue line to average, and the dataset filter to None. Keep the Q2 band available as a landmark.
 
-**Predict before editing.** Write down a direction or a value for each line if the report retains only months with Revenue ≥ 50. Give a reason for each prediction.
+**Loop A · Audit the baseline.** Predict whether the option stores a numeric mean. Find the two reference entries, calculate annual Revenue divided by twelve, and compare the result with the mean line. Explain where the chart gets its rule and where the auditor gets the number.
+
+**Loop B · Change the population.** Write down a direction or a value for each line if the report retains only months with Revenue ≥ 50. Give a reason for each prediction.
 
 **Try it.** In **dataset** choose Revenue as the filter dimension, `gte` as the operator, and 50 as the value. Open **Inspect plotted data**. Count the retained records and check their total. In **View ECharts option**, locate the new dataset transform, the series using that dataset, and the two objects in `markLine.data`. The relevant parts of those objects read as follows.
 
@@ -99,7 +51,9 @@ These are excerpts. The full entries also contain label and line styling. Look f
 
 **Hints.** Which line depends on the observations? Follow the series’ `datasetIndex` before inspecting its annotation. If the fixed line moves, check whether its definition was changed to Statistic. If the average seems wrong, check whether the filter field is Revenue or Target.
 
-**Try a changed case.** Keep the plotted measure and statistical line on Revenue. Switch the filter field to Target, then set its value to 60 after the new field appears. Confirm the generated condition is **Target ≥ 60**. Does the mean line now describe Target, or does it describe Revenue for a different set of months?
+**Reflect.** If your median and mean differ, use the largest surviving months to explain the direction. Give the benchmark, mean and median distinct captions that identify their populations or policy basis.
+
+**Loop C · Change the eligibility measure.** Keep the plotted measure and statistical line on Revenue. Switch the filter field to Target, then set its value to 60 after the new field appears. Confirm the generated condition is **Target ≥ 60**. Does the mean line now describe Target, or does it describe Revenue for a different set of months?
 
 <details>
 <summary>Check the values and the contract</summary>
