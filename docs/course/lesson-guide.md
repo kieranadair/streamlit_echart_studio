@@ -2,83 +2,25 @@
 
 A day is a short investigation carried out in ECharts Studio. The learner should leave with one explanation they can use again. The [syllabus](syllabus.md) supplies the investigation. This guide gives authors a consistent way to teach it.
 
-## The shape of a day
+## The seven parts of a lesson
 
-| Time to try in the pilot | What the learner does | What the author provides |
-| --- | --- | --- |
-| First 2 minutes | Opens a working chart and names a decision a reader could make. Recalls one relevant idea from an earlier day. | An exact starter, dataset, and any edits needed to reproduce the starting state in a fresh session. |
-| Next 2 minutes | Commits to a prediction about a mark, a row count, a coordinate, or an option path. | One question with a meaningful alternative prediction. A learner can record an answer on paper or say it aloud. |
-| Next 6–8 minutes | Changes one thing, observes the result, and inspects the smallest useful piece of the contract or data. | A short hint ladder and one way to recover from the most likely wrong turn. |
-| Last 5–8 minutes | Puts the idea to work on a second field, boundary, or audience. Checks a value and explains the result in ECharts terms. | A check the learner can reveal after trying, a link to the relevant part of the official reference, and a small reconstruction note for later. |
+1. **Meet the parameters.** Give the official path, its role, a concrete value, and its visible effect. Explain adjacent properties a learner could reasonably confuse.
+2. **Set the challenge.** Name a reader and the decision this chart should help them make.
+3. **Show the whole picture.** Present the finished comparison and its essential option fragment before taking it apart. In Studio, show the worked view when available.
+4. **Know the dataset.** Give the grain, units, and a few real rows the learner can trace.
+5. **Think it through.** Ask for a prediction, a reason, and an observation that could change their mind.
+6. **Build, observe, explain.** Make one change at a time. Check a row, a mark, and an option path. Include a boundary or recovery exercise, then change the brief and let the learner choose the controls.
+7. **Reflect.** Ask for an explanation that predicts a fresh case. Put the answer behind a reveal and link the relevant Apache reference.
 
-A learner who predicts incorrectly has something precise to investigate. Ask them to choose the next observation that would distinguish their explanation from another one. If a learner gets the result by chance, change the field or condition and ask for the next prediction.
-
-**Fade guidance deliberately.** On days 1–5 name both control and property. On days 6–15 give the task first and let learners reveal the branch. On days 16–25 ask for the mechanism and evidence before the recipe. On days 26–30 provide a reader brief and the references. A learner can request any hint early. Record which hint made the concept click during the pilot.
-
-## Copyable lesson template
-
-```markdown
-# Day NN · [Question a reader wants answered]
-
-**Starting state.** [Named example, dataset, bindings, optional branches,
-and a short fresh-session recipe. Include a previously learned idea to recall.]
-
-**Your task.** [A decision to make and one observable success condition.]
-
-**Predict.** [What will change? Give a specific mark, value, or option path.]
-
-**Try it in Studio.** [The smallest useful edit. Leave one choice to the learner.]
-
-**Find the evidence.** [One row or computed value, one native option path,
-and what the chart should let a reader see.]
-
-**If you get stuck.** [Hint 1 names the concept. Hint 2 gives the branch.
-Hint 3 gives the exact control and a recovery step.]
-
-**Try a changed case.** [New field, threshold, scale, or reader constraint.]
-
-<details>
-<summary>Check your reasoning</summary>
-
-[Expected outcome, acceptable alternatives, and a short explanation.
-Give a text or table route for checks that otherwise depend on colour or hover.]
-
-</details>
-
-**Take away.** [One sentence the learner completes and one reference link.]
-```
-
-A learner can use four lines in their own notes for the **starting state**, **prediction**, **evidence**, and **next variation**. Copy a short option fragment if it helps recreate the experiment. The complete chart and a screenshot are optional.
+Give more navigation help early and fade it as learners progress. Preserve conceptual explanations throughout. Measure how long each investigation actually takes during the solo pilot.
 
 ## Worked day 1
 
-**Learner brief.** You are preparing a retail review. Your colleague says March was on target. Use a single chart to check that claim, then explain how the same data supplies both marks.
+[Did March miss target?](day-01.md) follows a row through its axes and encodings, builds a mixed-series comparison and tests an independent reconstruction.
 
-**Start.** Open **Bar chart** with **Monthly retail**. Confirm Month is the shared X field and Revenue is the only Y field. In the preview locate the March row. Revenue and Target use thousands of dollars.
+## Worked day 8
 
-**Predict.** If you add Target, will March need another source row? Where should the target sit relative to the top of the March bar?
-
-**Try it.** Add Target under **Y fields · encode.y**. In **series**, set **Edit series** to Target and choose `line` for `series.type`. Leave Revenue as a bar. Give a colleague the decision before opening the option. Then open **View ECharts option** and find the two entries under `series`. These are the relevant fields from the starter after that edit.
-
-```python
-[
-    {"name": "Revenue", "type": "bar", "encode": {"x": "Month", "y": "Revenue"}},
-    {"name": "Target", "type": "line", "encode": {"x": "Month", "y": "Target"}},
-]
-```
-
-**Hints.** First ask which field would let a reader compare actual performance with expectation. Then look under the field selectors and the series tab. If both measures appear as bars, edit the series named Target. If Revenue became the line, select Revenue, return it to bar, and set Target to line.
-
-**Try a changed case.** Is February’s result the same? Remove Target from the selected fields. Predict whether the Target column will still be in the data preview. Restore it and explain where the choice to draw a line lives.
-
-<details>
-<summary>Check the values and the contract</summary>
-
-March shows 45 against 49, a shortfall of $4,000. February shows 48 against 46, $2,000 above target. The March observations share one source row. Both encodings read Month, while the two Y encodings choose different columns. Removing Target from the plotted measures leaves the source column available. The preview exposes both rows without requiring a hover gesture.
-
-</details>
-
-**Take away.** Finish “To find the value behind the Target line, I would follow …”. [Apache’s dataset and encoding guide](https://echarts.apache.org/handbook/en/concepts/dataset/)
+[Which regions qualify for review?](day-08.md) follows a source through a transform pipeline, tests an exact boundary, and separates eligibility, ranking and bar length.
 
 ## Worked day 16
 
