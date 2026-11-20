@@ -4,7 +4,7 @@ A course design for people who already make charts in Tableau and want comparabl
 
 ## The promise
 
-On day 1, a learner can answer “Did we miss our March revenue target?” by adding a target line to a working bar chart. On day 30, give them an unfamiliar chart brief and a new constraint. They can choose the data grain, build a view, trace one mark through the option to its source, and predict and verify a revision. They can use the official reference when they meet a property the course has never shown them.
+On day 1, reconcile an annual surplus with monthly misses, design a reliable hover comparison and diagnose a target line drawn in rank order. Each day targets about 30 minutes for an experienced visualisation practitioner, with three linked investigations and an independent handover. On day 30, give them an unfamiliar chart brief and a new constraint. They can choose the data grain, build a view, trace one mark through the option to its source, and predict and verify a revision. They can use the official reference when they meet a property the course has never shown them.
 
 Keep four questions in view when designing or changing a lesson.
 

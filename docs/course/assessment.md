@@ -6,8 +6,8 @@ The learner’s evidence is a working chart, an explanation that connects it to 
 
 | Day | Ask for | A variation that distinguishes understanding from imitation |
 | --- | --- | --- |
-| 5 | A two-series comparison and a trace from one mark to its row | Reverse which measure is a line. Ask whether either measure’s source values should change. |
-| 10 | A ranking explained in both table order and screen order | Ask for Stores above 61 after the learner has shown at least 61. Ask them to name the disappearing region before they edit. |
+| 5 | A two-series weather comparison with a shared scale, a non-colour cue and a trace to one dated row | Inspect a date with a missing High. Ask which properties govern identification and which observations actually exist. |
+| 10 | A ranking explained in both table order and screen order | Switch eligibility to Online ≥ 39 while preserving the Stores ranking. Ask how to expose a sort on the wrong field. |
 | 15 | A defensible encoding choice and an explanation of a colour boundary | Give the value exactly equal to the cutoff. Ask the learner to move the boundary and identify a second value whose colour should stay the same. |
 | 20 | An analytical claim plus its population, units, and calculation | Change the filter field while preserving the plotted measure. Ask *which observations* now inform the claim. |
 | 25 | A readable comparison at two widths, a text equivalent, and an explanation of layout ownership | Give a narrow chart in a wide browser. Ask which width controls `media.query` and how to test the answer. |
@@ -45,7 +45,7 @@ Record the five dimensions separately. A proposed sign of readiness is independe
 
 **Pilot learner.** Kieran works through the lessons in Studio and records his own evidence. His first run found days 1 and 8 too short and the distinction between axis types and field encodings unclear.
 
-**Next sessions.** Try the expanded [day 1](day-01.md) and [day 8](day-08.md) separately. Record time spent predicting, experimenting and explaining. Mark where the option first made sense or still felt redundant. On another day, reconstruct one example without the recipe and try a changed condition. Later, use days 16 and 25 to test whether those explanations carry over.
+**Next sessions.** Try the expanded [day 1](day-01.md) and [day 8](day-08.md) separately. Target about 30 active minutes per day. Record the time for each of the three loops and the handover separately. Note whether time went into analytical work, finding a control, or re-reading an instruction. If a day runs short and the transfer is easy, promote a harder case into the core. If navigation consumes the budget, clarify the starting state and retest. Mark where the option first made sense or still felt redundant. On another day, reconstruct one example without the recipe and try a changed condition. Later, use days 16 and 25 to test whether those explanations carry over.
 
 ### Two short pilot cards
 

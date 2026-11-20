@@ -1,12 +1,12 @@
 # Dataset guide and checked values
 
-The first fifteen minutes should go into understanding a chart. Use small familiar data where learners can check an answer by hand. Introduce an unfamiliar dataset when it helps distinguish a transferable skill from a memorised click sequence. The three Studio samples below are illustrative. The two external datasets are candidates for later integration. [Bundled sample definitions](https://github.com/kieranadair/streamlit_echart_studio/blob/626bf892b02642785cd2af13c411529ef29e5f45/echarts_studio/data.py)
+Start with an inspectable chart and a real comparison. Use small familiar data where learners can check an answer by hand. Introduce an unfamiliar dataset when it helps distinguish a transferable skill from a memorised click sequence. The three Studio samples below are illustrative. The two external datasets are candidates for later integration. [Bundled sample definitions](https://github.com/kieranadair/streamlit_echart_studio/blob/626bf892b02642785cd2af13c411529ef29e5f45/echarts_studio/data.py)
 
 ## Assignments by section
 
 | Days | Core data available now | Optional application to new data |
 | --- | --- | --- |
-| 1–5 · Read the contract | Monthly retail, with Weather log for the scale experiment | Give a second retail month to check. Keeping the domain familiar frees attention for `dataset` and `encode`. |
+| 1–5 · Read the contract | Monthly retail for comparison and typography, Regional channels for grain, Weather log for time and the checkpoint | Give a second retail month to check. Keeping the domain familiar frees attention for `dataset` and `encode`. |
 | 6–10 · Order and orientation | Regional channels, with Weather log for two X fields | Rank the regions by Online after working with Stores. Ask for a region that changes rank. |
 | 11–15 · Encodings | Regional channels in wide and long form, plus Weather log for gaps | **Palmer Penguins** for numeric position and bubble size. Keep the heatmap on Region–Channel, where the cell grain is already defined. |
 | 16–20 · Annotations and calculations | Monthly retail for references and windows, Regional channels for the fit, Weather log for missing values | **AirPassengers** for a seasonal series and a twelve-observation mean. |
@@ -18,7 +18,7 @@ The first fifteen minutes should go into understanding a chart. Use small famili
 **Monthly retail.** Twelve rows, one per calendar month in the illustrative year. Month is an ordered sequence of category labels. Revenue and Target are monthly amounts in thousands of dollars. Sorting the abbreviations alphabetically would destroy the chronology. One monthly record can supply a Revenue bar and a Target line.
 
 - March has Revenue 45 and Target 49. January, March, June, and September miss target across the full year. June’s pair is 56 and 60.
-- The full-year Revenue sum is 781 and its mean is 65.0833. Keeping Revenue ≥ 50 retains April through December, nine rows totalling 646. Their mean is 71.7778 and their median is 68. A fixed policy threshold of 60 stays at 60.
+- The full-year Revenue sum is 781 against Target of 755, a $26,000 surplus. September has the largest miss at $5,000. The full-year mean Revenue is 65.0833. Keeping Revenue ≥ 50 retains April through December, nine rows totalling 646. Their mean is 71.7778 and their median is 68. A fixed policy threshold of 60 stays at 60.
 - The first complete three-observation Revenue mean is 45 in March. The first complete four-observation mean is 48.25 in April. A peak marker identifies December at 98.
 
 **Regional channels.** Six rows, one per region. Stores, Online, and Wholesale are additive sales amounts in thousands of dollars. Stores measures sales through that channel. When using the Heatmap starter, Studio reshapes the table to 18 rows with columns Region, Channel, and Sales. Channel is the category on the initial X axis, Region the Y category, and Sales the colour-driving dimension at zero-based index 2.
